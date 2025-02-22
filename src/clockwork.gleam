@@ -51,22 +51,23 @@ pub fn with_month(cron: Cron, month) -> Cron {
 }
 
 /// Set the weekday field of a cron struct.
+/// Weekdays are 0-indexed, starting from Sunday.
 pub fn with_weekday(cron: Cron, weekday) -> Cron {
   Cron(..cron, weekday:)
 }
 
 /// Wildcard field for a cron struct.
-pub fn wildcard() -> CronField {
+pub fn every_time() -> CronField {
   Wildcard
 }
 
 /// Value field for a cron struct.
-pub fn value(v: Int) -> CronField {
+pub fn exactly(at v: Int) -> CronField {
   Value(v)
 }
 
 /// Range field for a cron struct.
-pub fn range(start: Int, end: Int) -> CronField {
+pub fn ranging(from start: Int, to end: Int) -> CronField {
   Range(start, end)
 }
 
@@ -75,17 +76,16 @@ pub fn list(fields: List(CronField)) -> CronField {
   List(fields)
 }
 
-/// Step field for a cron struct.
-/// May contain a wildcard, value, range, or list field.
-/// The step value must be greater than 0.
-pub fn step(field: CronField, step: Int) -> Result(CronField, Nil) {
-  case field {
-    _ if step <= 0 -> Error(Nil)
-    Wildcard -> Ok(Step(Wildcard, step))
-    Value(v) -> Ok(Step(Value(v), step))
-    Range(min, max) -> Ok(Step(Range(min, max), step))
-    _ -> Error(Nil)
-  }
+pub fn ranging_every(step: Int, from start: Int, to end: Int) -> CronField {
+  Step(Range(start, end), step)
+}
+
+pub fn every(step: Int) -> CronField {
+  Step(Wildcard, step)
+}
+
+pub fn stepping(every step: Int, from from: Int) -> CronField {
+  Step(Value(from), step)
 }
 
 /// Parse a cron string into a Cron struct.
@@ -127,8 +127,8 @@ fn field_to_string(field: CronField) -> String {
 
 /// Returns the next occurrence of a cron job after the given timestamp.
 pub fn next_occurrence(
-  cron: Cron,
-  from: timestamp.Timestamp,
+  given cron: Cron,
+  from from: timestamp.Timestamp,
 ) -> timestamp.Timestamp {
   jump_candidate(cron, timestamp.add(from, duration.seconds(60)))
 }
@@ -196,8 +196,7 @@ fn parse_range(input, min, max, is_month, is_weekday) -> Result(CronField, Nil) 
   }
 }
 
-@internal
-pub fn field_matches(field: CronField, value: Int) -> Bool {
+fn field_matches(field: CronField, value: Int) -> Bool {
   case field {
     Wildcard -> True
     Value(v) -> v == value
@@ -227,8 +226,7 @@ pub fn field_matches(field: CronField, value: Int) -> Bool {
   }
 }
 
-@internal
-pub fn next_in_field(
+fn next_in_field(
   field: CronField,
   current: Int,
   min: Int,
@@ -317,9 +315,7 @@ pub fn next_in_field(
   }
 }
 
-/// Returns the minimal matching value for the field.
-@internal
-pub fn minimal(field: CronField, min: Int, max: Int) -> Int {
+fn minimal(field: CronField, min: Int, max: Int) -> Int {
   case field {
     Wildcard -> min
     Value(v) -> v
@@ -338,8 +334,6 @@ pub fn minimal(field: CronField, min: Int, max: Int) -> Int {
   }
 }
 
-/// Adjusts candidate time field-by-field (month → day → hour → minute) and resets lower fields on rollover.
-/// Finally, it ensures the weekday matches.
 fn jump_candidate(cron: Cron, t: timestamp.Timestamp) -> timestamp.Timestamp {
   let t = set_seconds_to_zero(t)
   case
@@ -493,8 +487,6 @@ fn add_month(t: timestamp.Timestamp, months: Int) -> timestamp.Timestamp {
   timestamp.from_calendar(date, time, calendar.utc_offset)
 }
 
-/// Uses Zeller's Congruence to compute the weekday from a timestamp.
-/// Returns: 0 = Sunday, 1 = Monday, …, 6 = Saturday.
 fn get_weekday(t: timestamp.Timestamp) -> Int {
   let date = timestamp.to_calendar(t, calendar.utc_offset).0
   let year = case { month_to_int(date.month) } < 3 {
