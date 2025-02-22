@@ -1,0 +1,17 @@
+---
+version: 1.2.6
+title: from_string precedence test: 1,2,3-5/2 * * * *
+file: ./test/clockwork_test.gleam
+test_name: from_string_precedence_test
+---
+Ok(Cron(
+  List([
+    Value(1),
+    Value(2),
+    Step(Range(3, 5), 2),
+  ]),
+  Wildcard,
+  Wildcard,
+  Wildcard,
+  Wildcard,
+))
