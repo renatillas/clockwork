@@ -18,7 +18,7 @@ pub type Message {
   Stop
 }
 
-pub type State {
+type State {
   State(
     id: String,
     self: process.Subject(Message),
