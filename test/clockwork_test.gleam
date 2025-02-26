@@ -117,6 +117,20 @@ pub fn next_at_multiple_test() {
   ))
 }
 
+pub fn next_close_test() {
+  clockwork.default()
+  |> clockwork.next_occurrence(timestamp.from_calendar(
+    date: calendar.Date(2025, calendar.February, 26),
+    time: calendar.TimeOfDay(14, 32, 59, 0),
+    offset: calendar.utc_offset,
+  ))
+  |> timestamp.to_calendar(calendar.utc_offset)
+  |> should.equal(#(
+    calendar.Date(2025, calendar.February, 26),
+    calendar.TimeOfDay(14, 34, 0, 0),
+  ))
+}
+
 pub fn to_string_test() {
   let cron = "*/15 0 1,15 * 1-5"
   cron

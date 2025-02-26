@@ -130,7 +130,20 @@ pub fn next_occurrence(
   given cron: Cron,
   from from: timestamp.Timestamp,
 ) -> timestamp.Timestamp {
-  jump_candidate(cron, timestamp.add(from, duration.seconds(60)))
+  jump_candidate(
+    cron,
+    timestamp.add(from |> round_seconds, duration.milliseconds(60_000)),
+  )
+  |> set_seconds_to_zero
+}
+
+fn round_seconds(timestamp) {
+  let #(date, time) = timestamp.to_calendar(timestamp, calendar.utc_offset)
+  let time = case time.seconds {
+    59 -> calendar.TimeOfDay(time.hours, time.minutes + 1, 0, 0)
+    _ -> calendar.TimeOfDay(time.hours, time.minutes, 0, 0)
+  }
+  timestamp.from_calendar(date, time, calendar.utc_offset)
 }
 
 fn do_parse(input, min, max, is_month, is_weekday) -> Result(CronField, Nil) {
@@ -335,7 +348,6 @@ fn minimal(field: CronField, min: Int, max: Int) -> Int {
 }
 
 fn jump_candidate(cron: Cron, t: timestamp.Timestamp) -> timestamp.Timestamp {
-  let t = set_seconds_to_zero(t)
   case
     field_matches(cron.minute, get_minute(t)),
     field_matches(cron.hour, get_hour(t)),
