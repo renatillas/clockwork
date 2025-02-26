@@ -1,7 +1,7 @@
-# vento
+# clockwork
 
-[![Package Version](https://img.shields.io/hexpm/v/vento)](https://hex.pm/packages/vento)
-[![Hex Docs](https://img.shields.io/badge/hex-docs-ffaff3)](https://hexdocs.pm/vento/)
+[![Package Version](https://img.shields.io/hexpm/v/clockwork)](https://hex.pm/packages/clockwork)
+[![Hex Docs](https://img.shields.io/badge/hex-docs-ffaff3)](https://hexdocs.pm/clockwork/)
 
 ```sh
 gleam add clockwork
@@ -31,7 +31,7 @@ pub fn main() {
 }
 ```
 
-Further documentation can be found at <https://hexdocs.pm/vento>.
+Further documentation can be found at <https://hexdocs.pm/clockwork>.
 
 ## Development
 
