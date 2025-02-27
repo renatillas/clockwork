@@ -27,12 +27,15 @@ type State {
   )
 }
 
+pub fn configure_logger() {
+  logging.configure()
+}
+
 pub fn start(
   name: String,
   with cron: clockwork.Cron,
   do job: fn() -> Nil,
 ) -> Result(Schedule, actor.StartError) {
-  logging.configure()
   actor.start_spec(actor.Spec(
     init: fn() { init(cron, job, name) },
     loop: loop,
