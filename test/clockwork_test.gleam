@@ -41,11 +41,14 @@ pub fn next_all_star_test() {
   "* * * * *"
   |> clockwork.from_string
   |> should.be_ok
-  |> clockwork.next_occurrence(timestamp.from_calendar(
-    date: calendar.Date(2024, calendar.December, 25),
-    time: calendar.TimeOfDay(12, 30, 50, 0),
-    offset: calendar.utc_offset,
-  ))
+  |> clockwork.next_occurrence(
+    timestamp.from_calendar(
+      date: calendar.Date(2024, calendar.December, 25),
+      time: calendar.TimeOfDay(12, 30, 50, 0),
+      offset: calendar.utc_offset,
+    ),
+    calendar.utc_offset,
+  )
   |> timestamp.to_calendar(calendar.utc_offset)
   |> should.equal(#(
     calendar.Date(2024, calendar.December, 25),
@@ -57,11 +60,14 @@ pub fn next_at_5_4_star_star_star_test() {
   "5 4 * * *"
   |> clockwork.from_string
   |> should.be_ok
-  |> clockwork.next_occurrence(timestamp.from_calendar(
-    date: calendar.Date(2024, calendar.December, 25),
-    time: calendar.TimeOfDay(12, 30, 0, 0),
-    offset: calendar.utc_offset,
-  ))
+  |> clockwork.next_occurrence(
+    timestamp.from_calendar(
+      date: calendar.Date(2024, calendar.December, 25),
+      time: calendar.TimeOfDay(12, 30, 0, 0),
+      offset: calendar.utc_offset,
+    ),
+    calendar.utc_offset,
+  )
   |> timestamp.to_calendar(calendar.utc_offset)
   |> should.equal(#(
     calendar.Date(2024, calendar.December, 26),
@@ -73,11 +79,14 @@ pub fn next_at_5_4_25_star_star_test() {
   "5 4 25 * *"
   |> clockwork.from_string
   |> should.be_ok
-  |> clockwork.next_occurrence(timestamp.from_calendar(
-    date: calendar.Date(2025, calendar.December, 26),
-    time: calendar.TimeOfDay(12, 30, 50, 0),
-    offset: calendar.utc_offset,
-  ))
+  |> clockwork.next_occurrence(
+    timestamp.from_calendar(
+      date: calendar.Date(2025, calendar.December, 26),
+      time: calendar.TimeOfDay(12, 30, 50, 0),
+      offset: calendar.utc_offset,
+    ),
+    calendar.utc_offset,
+  )
   |> timestamp.to_calendar(calendar.utc_offset)
   |> should.equal(#(
     calendar.Date(2026, calendar.January, 25),
@@ -89,11 +98,14 @@ pub fn next_at_5_4_25_12_3_test() {
   "5 4 25 12 3"
   |> clockwork.from_string
   |> should.be_ok
-  |> clockwork.next_occurrence(timestamp.from_calendar(
-    date: calendar.Date(2025, calendar.February, 22),
-    time: calendar.TimeOfDay(18, 13, 0, 0),
-    offset: calendar.utc_offset,
-  ))
+  |> clockwork.next_occurrence(
+    timestamp.from_calendar(
+      date: calendar.Date(2025, calendar.February, 22),
+      time: calendar.TimeOfDay(18, 13, 0, 0),
+      offset: calendar.utc_offset,
+    ),
+    calendar.utc_offset,
+  )
   |> timestamp.to_calendar(calendar.utc_offset)
   |> should.equal(#(
     calendar.Date(2030, calendar.December, 25),
@@ -105,11 +117,14 @@ pub fn next_at_multiple_test() {
   "*/15 0 1,15 * *"
   |> clockwork.from_string
   |> should.be_ok
-  |> clockwork.next_occurrence(timestamp.from_calendar(
-    date: calendar.Date(2025, calendar.February, 22),
-    time: calendar.TimeOfDay(18, 0, 0, 0),
-    offset: calendar.utc_offset,
-  ))
+  |> clockwork.next_occurrence(
+    timestamp.from_calendar(
+      date: calendar.Date(2025, calendar.February, 22),
+      time: calendar.TimeOfDay(18, 0, 0, 0),
+      offset: calendar.utc_offset,
+    ),
+    calendar.utc_offset,
+  )
   |> timestamp.to_calendar(calendar.utc_offset)
   |> should.equal(#(
     calendar.Date(2025, calendar.March, 1),
@@ -119,11 +134,14 @@ pub fn next_at_multiple_test() {
 
 pub fn next_close_test() {
   clockwork.default()
-  |> clockwork.next_occurrence(timestamp.from_calendar(
-    date: calendar.Date(2025, calendar.February, 26),
-    time: calendar.TimeOfDay(14, 32, 59, 0),
-    offset: calendar.utc_offset,
-  ))
+  |> clockwork.next_occurrence(
+    timestamp.from_calendar(
+      date: calendar.Date(2025, calendar.February, 26),
+      time: calendar.TimeOfDay(14, 32, 59, 0),
+      offset: calendar.utc_offset,
+    ),
+    calendar.utc_offset,
+  )
   |> timestamp.to_calendar(calendar.utc_offset)
   |> should.equal(#(
     calendar.Date(2025, calendar.February, 26),
@@ -157,4 +175,22 @@ pub fn construct_using_builder_test() {
   |> clockwork.with_weekday(clockwork.ranging_every(2, from: 2, to: 6))
   |> clockwork.to_string
   |> should.equal("* 5 */5 5-10 2-6/2")
+}
+
+pub fn next_occurrence_with_local_offset_test() {
+  clockwork.default()
+  |> clockwork.with_hour(clockwork.exactly(at: 14))
+  |> clockwork.next_occurrence(
+    timestamp.from_calendar(
+      date: calendar.Date(2025, calendar.February, 26),
+      time: calendar.TimeOfDay(14, 32, 59, 0),
+      offset: calendar.local_offset(),
+    ),
+    calendar.local_offset(),
+  )
+  |> timestamp.to_calendar(calendar.local_offset())
+  |> should.equal(#(
+    calendar.Date(2025, calendar.February, 26),
+    calendar.TimeOfDay(14, 34, 0, 0),
+  ))
 }

@@ -2,8 +2,10 @@
 # You typically do not need to edit this file
 
 packages = [
+  { name = "acceptor_pool", version = "1.0.0", build_tools = ["rebar3"], requirements = [], otp_app = "acceptor_pool", source = "hex", outer_checksum = "0CBCD83FDC8B9AD2EEE2067EF8B91A14858A5883CB7CD800E6FCD5803E158788" },
   { name = "argv", version = "1.0.2", build_tools = ["gleam"], requirements = [], otp_app = "argv", source = "hex", outer_checksum = "BA1FF0929525DEBA1CE67256E5ADF77A7CDDFE729E3E3F57A5BDCAA031DED09D" },
   { name = "birdie", version = "1.2.6", build_tools = ["gleam"], requirements = ["argv", "edit_distance", "filepath", "glance", "gleam_community_ansi", "gleam_erlang", "gleam_stdlib", "justin", "rank", "simplifile", "term_size", "trie_again"], otp_app = "birdie", source = "hex", outer_checksum = "1363F4C7E7433A4A8350CC682BCDDBA5BBC6F66C94EFC63BC43025F796C4F6D0" },
+  { name = "ctx", version = "0.6.0", build_tools = ["rebar3"], requirements = [], otp_app = "ctx", source = "hex", outer_checksum = "A14ED2D1B67723DBEBBE423B28D7615EB0BDCBA6FF28F2D1F1B0A7E1D4AA5FC2" },
   { name = "edit_distance", version = "2.0.1", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "edit_distance", source = "hex", outer_checksum = "A1E485C69A70210223E46E63985FA1008B8B2DDA9848B7897469171B29020C05" },
   { name = "filepath", version = "1.1.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "filepath", source = "hex", outer_checksum = "67A6D15FB39EEB69DD31F8C145BB5A421790581BD6AA14B33D64D5A55DBD6587" },
   { name = "glam", version = "2.0.2", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "glam", source = "hex", outer_checksum = "4932A2D139AB0389E149396407F89654928D7B815E212BB02F13C66F53B1BBA1" },
@@ -18,13 +20,23 @@ packages = [
   { name = "gleam_time", version = "1.0.0-rc2", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "gleam_time", source = "hex", outer_checksum = "359B03FE6C839BDF22217D4462F716ABCC7F066E7F1917952E8BD26B38A7DDEA" },
   { name = "gleeunit", version = "1.3.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "gleeunit", source = "hex", outer_checksum = "0E6C83834BA65EDCAAF4FE4FB94AC697D9262D83E6F58A750D63C9F6C8A9D9FF" },
   { name = "glexer", version = "2.1.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "glexer", source = "hex", outer_checksum = "F74FB4F78C3C1E158DF15A7226F33A662672F58EEF1DFE6593B7FCDA38B0A0EB" },
+  { name = "glotel", version = "0.1.0", build_tools = ["gleam"], requirements = ["gleam_stdlib", "opentelemetry", "opentelemetry_exporter"], otp_app = "glotel", source = "hex", outer_checksum = "0F88DEA8B3A03D801328EF744619869394744CB21FD771D2DC9046E10890728F" },
+  { name = "gproc", version = "0.9.1", build_tools = ["rebar3"], requirements = [], otp_app = "gproc", source = "hex", outer_checksum = "905088E32E72127ED9466F0BAC0D8E65704CA5E73EE5A62CB073C3117916D507" },
+  { name = "grpcbox", version = "0.17.1", build_tools = ["rebar3"], requirements = ["acceptor_pool", "ctx", "gproc", "ts_chatterbox"], otp_app = "grpcbox", source = "hex", outer_checksum = "4A3B5D7111DAABC569DC9CBD9B202A3237D81C80BF97212FBC676832CB0CEB17" },
+  { name = "hpack_erl", version = "0.3.0", build_tools = ["rebar3"], requirements = [], otp_app = "hpack", source = "hex", outer_checksum = "D6137D7079169D8C485C6962DFE261AF5B9EF60FBC557344511C1E65E3D95FB0" },
   { name = "justin", version = "1.0.1", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "justin", source = "hex", outer_checksum = "7FA0C6DB78640C6DC5FBFD59BF3456009F3F8B485BF6825E97E1EB44E9A1E2CD" },
   { name = "logging", version = "1.3.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "logging", source = "hex", outer_checksum = "1098FBF10B54B44C2C7FDF0B01C1253CAFACDACABEFB4B0D027803246753E06D" },
+  { name = "opentelemetry", version = "1.5.0", build_tools = ["rebar3"], requirements = ["opentelemetry_api"], otp_app = "opentelemetry", source = "hex", outer_checksum = "CDF4F51D17B592FC592B9A75F86A6F808C23044BA7CF7B9534DEBBCC5C23B0EE" },
+  { name = "opentelemetry_api", version = "1.4.0", build_tools = ["rebar3", "mix"], requirements = [], otp_app = "opentelemetry_api", source = "hex", outer_checksum = "3DFBBFAA2C2ED3121C5C483162836C4F9027DEF469C41578AF5EF32589FCFC58" },
+  { name = "opentelemetry_exporter", version = "1.8.0", build_tools = ["rebar3"], requirements = ["grpcbox", "opentelemetry", "opentelemetry_api", "tls_certificate_check"], otp_app = "opentelemetry_exporter", source = "hex", outer_checksum = "A1F9F271F8D3B02B81462A6BFEF7075FD8457FDB06ADFF5D2537DF5E2264D9AF" },
   { name = "pprint", version = "1.0.4", build_tools = ["gleam"], requirements = ["glam", "gleam_stdlib"], otp_app = "pprint", source = "hex", outer_checksum = "C310A98BDC0995644847C3C8702DE19656D6BCD638B2A8A358B97824379ECAA1" },
   { name = "rank", version = "1.0.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "rank", source = "hex", outer_checksum = "5660E361F0E49CBB714CC57CC4C89C63415D8986F05B2DA0C719D5642FAD91C9" },
   { name = "simplifile", version = "2.2.0", build_tools = ["gleam"], requirements = ["filepath", "gleam_stdlib"], otp_app = "simplifile", source = "hex", outer_checksum = "0DFABEF7DC7A9E2FF4BB27B108034E60C81BEBFCB7AB816B9E7E18ED4503ACD8" },
+  { name = "ssl_verify_fun", version = "1.1.7", build_tools = ["mix", "rebar3", "make"], requirements = [], otp_app = "ssl_verify_fun", source = "hex", outer_checksum = "FE4C190E8F37401D30167C8C405EDA19469F34577987C76DDE613E838BBC67F8" },
   { name = "term_size", version = "1.0.1", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "term_size", source = "hex", outer_checksum = "D00BD2BC8FB3EBB7E6AE076F3F1FF2AC9D5ED1805F004D0896C784D06C6645F1" },
+  { name = "tls_certificate_check", version = "1.27.0", build_tools = ["rebar3"], requirements = ["ssl_verify_fun"], otp_app = "tls_certificate_check", source = "hex", outer_checksum = "51A5AD3DBD72D4694848965F3B5076E8B55D70EB8D5057FCDDD536029AB8A23C" },
   { name = "trie_again", version = "1.1.2", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "trie_again", source = "hex", outer_checksum = "5B19176F52B1BD98831B57FDC97BD1F88C8A403D6D8C63471407E78598E27184" },
+  { name = "ts_chatterbox", version = "0.15.1", build_tools = ["rebar3"], requirements = ["hpack_erl"], otp_app = "chatterbox", source = "hex", outer_checksum = "4F75B91451338BC0DA5F52F3480FA6EF6E3A2AEECFC33686D6B3D0A0948F31AA" },
 ]
 
 [requirements]
@@ -34,5 +46,6 @@ gleam_otp = { version = ">= 0.16.1 and < 1.0.0" }
 gleam_stdlib = { version = ">= 0.44.0 and < 2.0.0" }
 gleam_time = { version = ">= 1.0.0-rc2 and < 2.0.0" }
 gleeunit = { version = ">= 1.0.0 and < 2.0.0" }
+glotel = { version = ">= 0.1.0 and < 1.0.0" }
 logging = { version = ">= 1.3.0 and < 2.0.0" }
 pprint = { version = ">= 1.0.4 and < 2.0.0" }

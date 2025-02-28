@@ -129,21 +129,23 @@ fn field_to_string(field: CronField) -> String {
 pub fn next_occurrence(
   given cron: Cron,
   from from: timestamp.Timestamp,
+  with_offset offset: duration.Duration,
 ) -> timestamp.Timestamp {
   jump_candidate(
     cron,
-    timestamp.add(from |> round_seconds, duration.milliseconds(60_000)),
+    timestamp.add(from |> round_seconds(offset), duration.milliseconds(60_000)),
+    offset,
   )
-  |> set_seconds_to_zero
+  |> set_seconds_to_zero(offset)
 }
 
-fn round_seconds(timestamp) {
-  let #(date, time) = timestamp.to_calendar(timestamp, calendar.utc_offset)
+fn round_seconds(timestamp, offset) {
+  let #(date, time) = timestamp.to_calendar(timestamp, offset)
   let time = case time.seconds {
     59 -> calendar.TimeOfDay(time.hours, time.minutes + 1, 0, 0)
     _ -> calendar.TimeOfDay(time.hours, time.minutes, 0, 0)
   }
-  timestamp.from_calendar(date, time, calendar.utc_offset)
+  timestamp.from_calendar(date, time, offset)
 }
 
 fn do_parse(input, min, max, is_month, is_weekday) -> Result(CronField, Nil) {
@@ -347,44 +349,56 @@ fn minimal(field: CronField, min: Int, max: Int) -> Int {
   }
 }
 
-fn jump_candidate(cron: Cron, t: timestamp.Timestamp) -> timestamp.Timestamp {
+fn jump_candidate(
+  cron: Cron,
+  t: timestamp.Timestamp,
+  offset: duration.Duration,
+) -> timestamp.Timestamp {
   case
-    field_matches(cron.minute, get_minute(t)),
-    field_matches(cron.hour, get_hour(t)),
-    field_matches(cron.day, get_day(t)),
-    field_matches(cron.month, get_month(t)),
-    field_matches(cron.weekday, get_weekday(t))
+    field_matches(cron.minute, get_minute(t, offset)),
+    field_matches(cron.hour, get_hour(t, offset)),
+    field_matches(cron.day, get_day(t, offset)),
+    field_matches(cron.month, get_month(t, offset)),
+    field_matches(cron.weekday, get_weekday(t, offset))
   {
     True, True, True, True, True -> t
     True, True, True, True, False ->
-      jump_candidate(cron, {
+      jump_candidate(
+        cron,
         t
-        |> set_hour(minimal(cron.hour, 0, 23))
-        |> set_minute(minimal(cron.minute, 0, 59))
-        |> add_days(1)
-      })
+          |> set_hour(minimal(cron.hour, 0, 23), offset)
+          |> set_minute(minimal(cron.minute, 0, 59), offset)
+          |> add_days(1),
+        offset,
+      )
     True, True, True, False, _ ->
-      jump_candidate(cron, {
+      jump_candidate(
+        cron,
         t
-        |> set_day(minimal(cron.day, 1, days_in_month(t)))
-        |> set_hour(minimal(cron.hour, 0, 23))
-        |> set_minute(minimal(cron.minute, 0, 59))
-        |> add_month(1)
-      })
+          |> set_day(minimal(cron.day, 1, days_in_month(t, offset)), offset)
+          |> set_hour(minimal(cron.hour, 0, 23), offset)
+          |> set_minute(minimal(cron.minute, 0, 59), offset)
+          |> add_month(1, offset),
+        offset,
+      )
     True, True, False, _, _ ->
-      jump_candidate(cron, {
+      jump_candidate(
+        cron,
         t
-        |> set_hour(minimal(cron.hour, 0, 23))
-        |> set_minute(minimal(cron.minute, 0, 59))
-        |> add_days(1)
-      })
+          |> set_hour(minimal(cron.hour, 0, 23), offset)
+          |> set_minute(minimal(cron.minute, 0, 59), offset)
+          |> add_days(1),
+        offset,
+      )
     True, False, _, _, _ ->
-      jump_candidate(cron, {
+      jump_candidate(
+        cron,
         t
-        |> set_minute(minimal(cron.minute, 0, 59))
-        |> add_hours(1)
-      })
-    False, _, _, _, _ -> jump_candidate(cron, add_minutes(t, 1))
+          |> set_minute(minimal(cron.minute, 0, 59), offset)
+          |> add_hours(1),
+        offset,
+      )
+    False, _, _, _, _ -> jump_candidate(cron, add_minutes(t, 1), offset)
   }
 }
 
@@ -392,14 +406,18 @@ fn add_minutes(t: timestamp.Timestamp, minutes: Int) -> timestamp.Timestamp {
   timestamp.add(t, duration.seconds(minutes * 60))
 }
 
-fn set_minute(t: timestamp.Timestamp, minute: Int) -> timestamp.Timestamp {
-  let #(date, time) = timestamp.to_calendar(t, calendar.utc_offset)
+fn set_minute(
+  t: timestamp.Timestamp,
+  minute: Int,
+  offset,
+) -> timestamp.Timestamp {
+  let #(date, time) = timestamp.to_calendar(t, offset)
   let time = calendar.TimeOfDay(..time, minutes: minute)
-  timestamp.from_calendar(date, time, calendar.utc_offset)
+  timestamp.from_calendar(date, time, offset)
 }
 
-fn get_minute(t: timestamp.Timestamp) -> Int {
-  let #(_, time) = timestamp.to_calendar(t, calendar.utc_offset)
+fn get_minute(t: timestamp.Timestamp, offset) -> Int {
+  let #(_, time) = timestamp.to_calendar(t, offset)
   time.minutes
 }
 
@@ -407,34 +425,34 @@ fn add_hours(t: timestamp.Timestamp, hours: Int) -> timestamp.Timestamp {
   timestamp.add(t, duration.seconds({ hours * 3600 }))
 }
 
-fn set_hour(t: timestamp.Timestamp, hour: Int) -> timestamp.Timestamp {
-  let #(date, time) = timestamp.to_calendar(t, calendar.utc_offset)
+fn set_hour(t: timestamp.Timestamp, hour: Int, offset) -> timestamp.Timestamp {
+  let #(date, time) = timestamp.to_calendar(t, offset)
   let time = calendar.TimeOfDay(..time, hours: hour)
-  timestamp.from_calendar(date, time, calendar.utc_offset)
+  timestamp.from_calendar(date, time, offset)
 }
 
-fn get_hour(t: timestamp.Timestamp) -> Int {
-  let #(_, time) = timestamp.to_calendar(t, calendar.utc_offset)
+fn get_hour(t: timestamp.Timestamp, offset) -> Int {
+  let #(_, time) = timestamp.to_calendar(t, offset)
   time.hours
 }
 
 fn add_days(t: timestamp.Timestamp, days: Int) -> timestamp.Timestamp {
-  timestamp.add(t, duration.seconds({ days * 86_400 }))
+  timestamp.add(t, duration.seconds(days * 86_400))
 }
 
-fn get_day(t: timestamp.Timestamp) -> Int {
-  let #(date, _) = timestamp.to_calendar(t, calendar.utc_offset)
+fn get_day(t: timestamp.Timestamp, offset) -> Int {
+  let #(date, _) = timestamp.to_calendar(t, offset)
   date.day
 }
 
-fn set_day(t: timestamp.Timestamp, day: Int) -> timestamp.Timestamp {
-  let #(date, time) = timestamp.to_calendar(t, calendar.utc_offset)
+fn set_day(t: timestamp.Timestamp, day: Int, offset) -> timestamp.Timestamp {
+  let #(date, time) = timestamp.to_calendar(t, offset)
   let date = calendar.Date(..date, day: day)
-  timestamp.from_calendar(date, time, calendar.utc_offset)
+  timestamp.from_calendar(date, time, offset)
 }
 
-fn days_in_month(t: timestamp.Timestamp) -> Int {
-  let #(date, _) = timestamp.to_calendar(t, calendar.utc_offset)
+fn days_in_month(t: timestamp.Timestamp, offset) -> Int {
+  let #(date, _) = timestamp.to_calendar(t, offset)
   case date.month {
     calendar.January -> 31
     calendar.February ->
@@ -459,8 +477,8 @@ fn is_leap_year(year: Int) -> Bool {
   { year % 4 } == 0 && { year % 100 } != 0 || { year % 400 } == 0
 }
 
-fn get_month(t: timestamp.Timestamp) -> Int {
-  let #(date, _) = timestamp.to_calendar(t, calendar.utc_offset)
+fn get_month(t: timestamp.Timestamp, offset) -> Int {
+  let #(date, _) = timestamp.to_calendar(t, offset)
   case date.month {
     calendar.January -> 1
     calendar.February -> 2
@@ -477,8 +495,8 @@ fn get_month(t: timestamp.Timestamp) -> Int {
   }
 }
 
-fn add_month(t: timestamp.Timestamp, months: Int) -> timestamp.Timestamp {
-  let #(date, time) = timestamp.to_calendar(t, calendar.utc_offset)
+fn add_month(t: timestamp.Timestamp, months: Int, offset) -> timestamp.Timestamp {
+  let #(date, time) = timestamp.to_calendar(t, offset)
   let month = case { month_to_int(date.month) + months } {
     1 -> calendar.January
     2 -> calendar.February
@@ -496,11 +514,11 @@ fn add_month(t: timestamp.Timestamp, months: Int) -> timestamp.Timestamp {
     _ -> panic
   }
   let date = calendar.Date(..date, month: month)
-  timestamp.from_calendar(date, time, calendar.utc_offset)
+  timestamp.from_calendar(date, time, offset)
 }
 
-fn get_weekday(t: timestamp.Timestamp) -> Int {
-  let date = timestamp.to_calendar(t, calendar.utc_offset).0
+fn get_weekday(t: timestamp.Timestamp, offset) -> Int {
+  let date = timestamp.to_calendar(t, offset).0
   let year = case { month_to_int(date.month) } < 3 {
     True -> date.year - 1
     False -> date.year
@@ -546,8 +564,8 @@ fn month_to_int(month: calendar.Month) -> Int {
   }
 }
 
-fn set_seconds_to_zero(t: timestamp.Timestamp) -> timestamp.Timestamp {
-  let #(date, time) = timestamp.to_calendar(t, calendar.utc_offset)
+fn set_seconds_to_zero(t: timestamp.Timestamp, offset) -> timestamp.Timestamp {
+  let #(date, time) = timestamp.to_calendar(t, offset)
   let time = calendar.TimeOfDay(time.hours, time.minutes, 0, 0)
-  timestamp.from_calendar(date, time, calendar.utc_offset)
+  timestamp.from_calendar(date, time, offset)
 }

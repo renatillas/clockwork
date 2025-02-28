@@ -9,10 +9,15 @@ gleam add clockwork
 
 ```gleam
 import clockwork
+import clockwork/schedule
+import gleam/erlang/process
+import gleam/io
 
 pub fn main() {
 
-  /// Here we create a cron schedule that triggers every 15 minutes on the 1st and 15th of the month.
+  // Here we create a cron schedule that triggers
+  // every 15 minutes on the 1st and 15th of the month,
+  // from May to October, every two week-days from Tuesday to Saturday.
   let assert Ok(cron) = "*/15 0 1,15 5-10 2-6/2" |> clockwork.from_string
 
   /// Here we create a cron using functions instead.
@@ -25,8 +30,14 @@ pub fn main() {
 
   let now = ...
 
-  /// Here we calculate the next occurrence of the cron schedule after the given timestamp.
+  // Here we calculate the next occurrence
+  // of the cron schedule after the given timestamp.
   clockwork.next_occurrence(given: cron, from: now)
+
+  // Here we schedule a function to be executed given the cron schedule.
+  schedule.configure_logger()
+  schedule.start("my_schedule", cron, fn() { io.println("Hello, world!") })
+  process.sleep_forever()
 
 }
 ```
