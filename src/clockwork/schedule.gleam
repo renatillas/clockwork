@@ -1,10 +1,9 @@
 import clockwork
 import gleam/erlang/process
 import gleam/float
-import gleam/function
 import gleam/int
-import gleam/io
 import gleam/otp/actor
+import gleam/otp/supervision
 import gleam/result
 import gleam/string
 import gleam/time/calendar
@@ -85,44 +84,73 @@ pub fn with_time_offset(
   )
 }
 
-pub fn start(scheduler: Scheduler) -> Result(Schedule, actor.StartError) {
+fn start_actor(scheduler: Scheduler) {
   case scheduler.with_logging {
     True -> logging.configure()
     False -> Nil
   }
-  actor.start_spec(actor.Spec(
-    init: fn() {
-      init(
-        scheduler.cron,
-        scheduler.job,
-        scheduler.id,
-        scheduler.with_telemetry,
-        scheduler.offset,
+
+  actor.new_with_initialiser(100, fn(self) {
+    let state =
+      State(
+        id: scheduler.id,
+        self:,
+        cron: scheduler.cron,
+        job: scheduler.job,
+        with_telemetry: scheduler.with_telemetry,
+        offset: scheduler.offset,
       )
-    },
-    loop: loop,
-    init_timeout: 100,
-  ))
-  |> result.map(Schedule)
+
+    let selector =
+      process.new_selector()
+      |> process.select(self)
+
+    actor.initialised(state)
+    |> actor.selecting(selector)
+    |> actor.returning(self)
+    |> Ok
+  })
+  |> actor.on_message(loop)
+  |> actor.start
+}
+
+/// Start an unsupervised scheduler. Prefer to use [`supervised`](#supervised) to start
+/// the scheduler as part of your supervision tree.
+pub fn start(scheduler: Scheduler) -> Result(Schedule, actor.StartError) {
+  start_actor(scheduler)
+  |> result.map(fn(started) { Schedule(started.data) })
+}
+
+/// Start a scheduler as part of your supervision tree. You should provide a subject to receive
+/// the schedule value once your supervisor has started.
+///
+/// ```gleam
+/// let schedule_receiver = process.new_subject()
+///
+/// let schedule_child_spec = schedule.supervised(scheduler, schedule_receiver)
+///
+/// // Start your supervision tree...
+///
+/// let assert Ok(schedule) = process.receive(schedule_receiver, 1000)
+///
+/// schedule.stop(schedule)
+/// ```
+pub fn supervised(
+  scheduler: Scheduler,
+  schedule_receiver: process.Subject(Schedule),
+) {
+  supervision.worker(fn() {
+    use started <- result.try(start_actor(scheduler))
+    process.send(schedule_receiver, Schedule(started.data))
+    Ok(started)
+  })
 }
 
 pub fn stop(schedule: Schedule) {
   process.send(schedule.subject, Stop)
 }
 
-fn init(cron, job, name, telemetry, offset) {
-  let subject = process.new_subject()
-  let state = State(name, subject, cron, job, telemetry, offset)
-
-  let selector =
-    process.new_selector() |> process.selecting(subject, function.identity)
-
-  enqueue_job(cron, state)
-  logging.log(logging.Info, "[CLOCKWORK] Started cron job: " <> state.id)
-  actor.Ready(state, selector)
-}
-
-fn loop(message: Message, state: State) {
+fn loop(state: State, message: Message) {
   case message {
     Run -> {
       logging.log(
@@ -135,47 +163,38 @@ fn loop(message: Message, state: State) {
         |> timestamp.to_unix_seconds
         |> float.to_string(),
       )
-      process.start(
-        fn() {
-          case state.with_telemetry {
-            True -> {
-              let human_readable_time =
-                timestamp.system_time()
-                |> timestamp.to_calendar(state.offset)
+      process.spawn(fn() {
+        case state.with_telemetry {
+          True -> {
+            let human_readable_time =
+              timestamp.system_time()
+              |> timestamp.to_calendar(state.offset)
 
-              use _ <- span.new_of_kind(span_kind.Consumer, "job-" <> state.id, [
-                #(
-                  "timestamp",
-                  timestamp.system_time()
-                    |> timestamp.to_unix_seconds
-                    |> float.to_string(),
-                ),
-                #("year", { human_readable_time.0 }.year |> int.to_string()),
-                #("month", { human_readable_time.0 }.month |> string.inspect()),
-                #("day", { human_readable_time.0 }.day |> int.to_string()),
-                #("hour", { human_readable_time.1 }.hours |> int.to_string()),
-                #(
-                  "minute",
-                  { human_readable_time.1 }.minutes |> int.to_string(),
-                ),
-                #(
-                  "second",
-                  { human_readable_time.1 }.seconds |> int.to_string(),
-                ),
-              ])
-              state.job()
-            }
-            False -> state.job()
+            use _ <- span.new_of_kind(span_kind.Consumer, "job-" <> state.id, [
+              #(
+                "timestamp",
+                timestamp.system_time()
+                  |> timestamp.to_unix_seconds
+                  |> float.to_string(),
+              ),
+              #("year", { human_readable_time.0 }.year |> int.to_string()),
+              #("month", { human_readable_time.0 }.month |> string.inspect()),
+              #("day", { human_readable_time.0 }.day |> int.to_string()),
+              #("hour", { human_readable_time.1 }.hours |> int.to_string()),
+              #("minute", { human_readable_time.1 }.minutes |> int.to_string()),
+              #("second", { human_readable_time.1 }.seconds |> int.to_string()),
+            ])
+            state.job()
           }
-        },
-        True,
-      )
+          False -> state.job()
+        }
+      })
       enqueue_job(state.cron, state)
       actor.continue(state)
     }
     Stop -> {
       logging.log(logging.Info, "[CLOCKWORK] Stopping job: " <> state.id)
-      actor.Stop(process.Normal)
+      actor.stop()
     }
   }
 }
