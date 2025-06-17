@@ -12,7 +12,7 @@ import clockwork
 import clockwork/schedule
 import gleam/erlang/process
 import gleam/io
-import gleam/otp/static_cupervisor as supervisor
+import gleam/otp/static_supervisor as supervisor
 import gleam/time/timestamp
 
 pub fn main() {
