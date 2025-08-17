@@ -13,7 +13,7 @@ repository = { type = "github", user = "renatillas", repo = "clockwork" }
 # https://gleam.run/writing-gleam/gleam-toml/.
 
 [dependencies]
-gleam_stdlib = ">= 0.60.0 and < 2.0.0"
+gleam_stdlib = ">= 0.53.0 and < 2.0.0"
 gleam_time = ">= 1.0.0 and < 2.0.0"
 gleam_otp = ">= 1.0.0 and < 2.0.0"
 gleam_erlang = ">= 1.0.0 and < 2.0.0"

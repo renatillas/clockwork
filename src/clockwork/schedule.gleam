@@ -105,6 +105,8 @@ fn start_actor(scheduler: Scheduler) {
       process.new_selector()
       |> process.select(self)
 
+    enqueue_job(scheduler.cron, state)
+
     actor.initialised(state)
     |> actor.selecting(selector)
     |> actor.returning(self)
