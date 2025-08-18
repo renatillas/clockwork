@@ -25,70 +25,395 @@ pub opaque type CronField {
   Step(CronField, Int)
 }
 
-/// Default cron struct with all fields set to wildcard.
+/// Creates a default Cron struct with all fields set to wildcard (`*`).
+/// 
+/// This represents a schedule that runs every minute of every hour of every day.
+/// 
+/// ## Examples
+/// 
+/// ```gleam
+/// let cron = clockwork.default()
+/// // Equivalent to "* * * * *" - runs every minute
+/// ```
+/// 
+/// ## Returns
+/// 
+/// A `Cron` struct with all fields set to `Wildcard`.
 pub fn default() -> Cron {
   Cron(Wildcard, Wildcard, Wildcard, Wildcard, Wildcard)
 }
 
-/// Set the minute field of a cron struct.
+/// Sets the minute field of a Cron struct.
+/// 
+/// Minutes range from 0 to 59.
+/// 
+/// ## Parameters
+/// 
+/// - `cron`: The Cron struct to update
+/// - `minute`: A `CronField` specifying when to run within the hour
+/// 
+/// ## Examples
+/// 
+/// ```gleam
+/// clockwork.default()
+/// |> clockwork.with_minute(clockwork.exactly(at: 30))
+/// // Runs at minute 30 of every hour
+/// 
+/// clockwork.default()
+/// |> clockwork.with_minute(clockwork.every(15))
+/// // Runs every 15 minutes (0, 15, 30, 45)
+/// ```
+/// 
+/// ## Returns
+/// 
+/// A new `Cron` struct with the updated minute field.
 pub fn with_minute(cron: Cron, minute) -> Cron {
   Cron(..cron, minute:)
 }
 
-/// Set the hour field of a cron struct.
+/// Sets the hour field of a Cron struct.
+/// 
+/// Hours range from 0 to 23 (24-hour format).
+/// 
+/// ## Parameters
+/// 
+/// - `cron`: The Cron struct to update
+/// - `hour`: A `CronField` specifying which hours to run
+/// 
+/// ## Examples
+/// 
+/// ```gleam
+/// clockwork.default()
+/// |> clockwork.with_hour(clockwork.exactly(at: 9))
+/// // Runs at 9 AM
+/// 
+/// clockwork.default()
+/// |> clockwork.with_hour(clockwork.ranging(from: 9, to: 17))
+/// // Runs every hour from 9 AM to 5 PM
+/// ```
+/// 
+/// ## Returns
+/// 
+/// A new `Cron` struct with the updated hour field.
 pub fn with_hour(cron: Cron, hour) -> Cron {
   Cron(..cron, hour:)
 }
 
-/// Set the day field of a cron struct.
+/// Sets the day of month field of a Cron struct.
+/// 
+/// Days range from 1 to 31 (depending on the month).
+/// 
+/// ## Parameters
+/// 
+/// - `cron`: The Cron struct to update
+/// - `day`: A `CronField` specifying which days of the month to run
+/// 
+/// ## Examples
+/// 
+/// ```gleam
+/// clockwork.default()
+/// |> clockwork.with_day(clockwork.exactly(at: 1))
+/// // Runs on the first day of every month
+/// 
+/// clockwork.default()
+/// |> clockwork.with_day(clockwork.list([
+///   clockwork.exactly(1),
+///   clockwork.exactly(15)
+/// ]))
+/// // Runs on the 1st and 15th of every month
+/// ```
+/// 
+/// ## Returns
+/// 
+/// A new `Cron` struct with the updated day field.
 pub fn with_day(cron: Cron, day) -> Cron {
   Cron(..cron, day:)
 }
 
-/// Set the month field of a cron struct.
+/// Sets the month field of a Cron struct.
+/// 
+/// Months range from 1 (January) to 12 (December).
+/// 
+/// ## Parameters
+/// 
+/// - `cron`: The Cron struct to update
+/// - `month`: A `CronField` specifying which months to run
+/// 
+/// ## Examples
+/// 
+/// ```gleam
+/// clockwork.default()
+/// |> clockwork.with_month(clockwork.exactly(at: 12))
+/// // Runs only in December
+/// 
+/// clockwork.default()
+/// |> clockwork.with_month(clockwork.ranging(from: 6, to: 8))
+/// // Runs in June, July, and August
+/// ```
+/// 
+/// ## Returns
+/// 
+/// A new `Cron` struct with the updated month field.
 pub fn with_month(cron: Cron, month) -> Cron {
   Cron(..cron, month:)
 }
 
-/// Set the weekday field of a cron struct.
-/// Weekdays are 0-indexed, starting from Sunday.
+/// Sets the weekday field of a Cron struct.
+/// 
+/// Weekdays range from 0 to 6, where:
+/// - 0 = Sunday
+/// - 1 = Monday
+/// - 2 = Tuesday
+/// - 3 = Wednesday
+/// - 4 = Thursday
+/// - 5 = Friday
+/// - 6 = Saturday
+/// 
+/// ## Parameters
+/// 
+/// - `cron`: The Cron struct to update
+/// - `weekday`: A `CronField` specifying which days of the week to run
+/// 
+/// ## Examples
+/// 
+/// ```gleam
+/// clockwork.default()
+/// |> clockwork.with_weekday(clockwork.ranging(from: 1, to: 5))
+/// // Runs Monday through Friday
+/// 
+/// clockwork.default()
+/// |> clockwork.with_weekday(clockwork.exactly(at: 0))
+/// // Runs only on Sundays
+/// ```
+/// 
+/// ## Returns
+/// 
+/// A new `Cron` struct with the updated weekday field.
 pub fn with_weekday(cron: Cron, weekday) -> Cron {
   Cron(..cron, weekday:)
 }
 
-/// Wildcard field for a cron struct.
+/// Creates a wildcard CronField that matches all values.
+/// 
+/// Equivalent to `*` in cron syntax.
+/// 
+/// ## Examples
+/// 
+/// ```gleam
+/// clockwork.default()
+/// |> clockwork.with_hour(clockwork.every_time())
+/// // Runs every hour (same as default)
+/// ```
+/// 
+/// ## Returns
+/// 
+/// A `CronField` representing a wildcard.
 pub fn every_time() -> CronField {
   Wildcard
 }
 
-/// Value field for a cron struct.
+/// Creates a CronField that matches exactly one specific value.
+/// 
+/// ## Parameters
+/// 
+/// - `at`: The exact value to match
+/// 
+/// ## Examples
+/// 
+/// ```gleam
+/// clockwork.exactly(at: 30)
+/// // Matches when the field equals 30
+/// 
+/// clockwork.default()
+/// |> clockwork.with_minute(clockwork.exactly(at: 0))
+/// // Runs at the top of every hour
+/// ```
+/// 
+/// ## Returns
+/// 
+/// A `CronField` representing a single value.
 pub fn exactly(at v: Int) -> CronField {
   Value(v)
 }
 
-/// Range field for a cron struct.
+/// Creates a CronField that matches a range of values (inclusive).
+/// 
+/// ## Parameters
+/// 
+/// - `from`: The start of the range (inclusive)
+/// - `to`: The end of the range (inclusive)
+/// 
+/// ## Examples
+/// 
+/// ```gleam
+/// clockwork.ranging(from: 9, to: 17)
+/// // Matches values from 9 to 17 inclusive
+/// 
+/// clockwork.default()
+/// |> clockwork.with_hour(clockwork.ranging(from: 9, to: 17))
+/// // Runs every hour from 9 AM to 5 PM
+/// ```
+/// 
+/// ## Returns
+/// 
+/// A `CronField` representing a range of values.
 pub fn ranging(from start: Int, to end: Int) -> CronField {
   Range(start, end)
 }
 
-/// List field for a cron struct.
+/// Creates a CronField that matches any value in a list of fields.
+/// 
+/// Equivalent to comma-separated values in cron syntax.
+/// 
+/// ## Parameters
+/// 
+/// - `fields`: A list of CronFields to match against
+/// 
+/// ## Examples
+/// 
+/// ```gleam
+/// clockwork.list([
+///   clockwork.exactly(0),
+///   clockwork.exactly(15),
+///   clockwork.exactly(30),
+///   clockwork.exactly(45)
+/// ])
+/// // Matches at 0, 15, 30, and 45
+/// 
+/// clockwork.list([
+///   clockwork.ranging(from: 1, to: 5),
+///   clockwork.exactly(10)
+/// ])
+/// // Matches 1-5 and 10
+/// ```
+/// 
+/// ## Returns
+/// 
+/// A `CronField` representing a list of possible matches.
 pub fn list(fields: List(CronField)) -> CronField {
   List(fields)
 }
 
+/// Creates a CronField that matches every nth value within a range.
+/// 
+/// Equivalent to `start-end/step` in cron syntax.
+/// 
+/// ## Parameters
+/// 
+/// - `step`: The interval between matches
+/// - `from`: The start of the range (inclusive)
+/// - `to`: The end of the range (inclusive)
+/// 
+/// ## Examples
+/// 
+/// ```gleam
+/// clockwork.ranging_every(2, from: 0, to: 10)
+/// // Matches 0, 2, 4, 6, 8, 10
+/// 
+/// clockwork.default()
+/// |> clockwork.with_weekday(clockwork.ranging_every(2, from: 1, to: 5))
+/// // Runs on Monday, Wednesday, and Friday
+/// ```
+/// 
+/// ## Returns
+/// 
+/// A `CronField` representing a stepped range.
 pub fn ranging_every(step: Int, from start: Int, to end: Int) -> CronField {
   Step(Range(start, end), step)
 }
 
+/// Creates a CronField that matches every nth value.
+/// 
+/// Equivalent to `*/step` in cron syntax.
+/// 
+/// ## Parameters
+/// 
+/// - `step`: The interval between matches
+/// 
+/// ## Examples
+/// 
+/// ```gleam
+/// clockwork.every(15)
+/// // Matches every 15th value (0, 15, 30, 45 for minutes)
+/// 
+/// clockwork.default()
+/// |> clockwork.with_minute(clockwork.every(5))
+/// // Runs every 5 minutes
+/// ```
+/// 
+/// ## Returns
+/// 
+/// A `CronField` representing a step interval.
 pub fn every(step: Int) -> CronField {
   Step(Wildcard, step)
 }
 
+/// Creates a CronField that matches every nth value starting from a specific value.
+/// 
+/// Equivalent to `from/step` in cron syntax.
+/// 
+/// ## Parameters
+/// 
+/// - `every`: The interval between matches
+/// - `from`: The starting value
+/// 
+/// ## Examples
+/// 
+/// ```gleam
+/// clockwork.stepping(every: 10, from: 5)
+/// // Matches 5, 15, 25, 35, 45, 55 (for minutes)
+/// 
+/// clockwork.default()
+/// |> clockwork.with_minute(clockwork.stepping(every: 20, from: 10))
+/// // Runs at minutes 10, 30, and 50
+/// ```
+/// 
+/// ## Returns
+/// 
+/// A `CronField` representing a stepped sequence starting from a value.
 pub fn stepping(every step: Int, from from: Int) -> CronField {
   Step(Value(from), step)
 }
 
-/// Parse a cron string into a Cron struct.
+/// Parses a cron expression string into a Cron struct.
+/// 
+/// Accepts standard 5-field cron expressions with support for:
+/// - Wildcards (`*`)
+/// - Specific values (`5`)
+/// - Ranges (`1-5`)
+/// - Lists (`1,5,10`)
+/// - Steps (`*/5`, `10-30/5`)
+/// - Month names (`JAN`, `FEB`, etc.)
+/// - Weekday names (`SUN`, `MON`, etc.)
+/// 
+/// ## Parameters
+/// 
+/// - `cron`: A string containing a valid cron expression
+/// 
+/// ## Examples
+/// 
+/// ```gleam
+/// let assert Ok(cron) = clockwork.from_string("0 9 * * 1-5")
+/// // Weekdays at 9 AM
+/// 
+/// let assert Ok(cron) = clockwork.from_string("*/15 * * * *")
+/// // Every 15 minutes
+/// 
+/// let assert Ok(cron) = clockwork.from_string("0 0 1 JAN,JUL *")
+/// // Midnight on January 1st and July 1st
+/// ```
+/// 
+/// ## Returns
+/// 
+/// - `Ok(Cron)` if the string is a valid cron expression
+/// - `Error(Nil)` if the string is invalid
+/// 
+/// ## Errors
+/// 
+/// Returns an error if:
+/// - The expression doesn't have exactly 5 fields
+/// - Any field contains invalid syntax
+/// - Values are out of valid ranges
 pub fn from_string(cron: String) {
   let parts = string.split(cron, on: " ")
   use <- bool.guard(list.length(parts) != 5, return: Error(Nil))
@@ -103,7 +428,29 @@ pub fn from_string(cron: String) {
   Ok(Cron(minute, hour, day, month, weekday))
 }
 
-/// Convert a Cron struct into a cron string.
+/// Converts a Cron struct back into a cron expression string.
+/// 
+/// The output string can be parsed back using `from_string` to recreate
+/// the same Cron struct.
+/// 
+/// ## Parameters
+/// 
+/// - `cron`: The Cron struct to convert
+/// 
+/// ## Examples
+/// 
+/// ```gleam
+/// let cron = clockwork.default()
+///   |> clockwork.with_minute(clockwork.every(15))
+///   |> clockwork.with_hour(clockwork.ranging(from: 9, to: 17))
+/// 
+/// let cron_string = clockwork.to_string(cron)
+/// // Returns: "*/15 9-17 * * *"
+/// ```
+/// 
+/// ## Returns
+/// 
+/// A string representation of the cron expression.
 pub fn to_string(cron: Cron) -> String {
   let minute = field_to_string(cron.minute)
   let hour = field_to_string(cron.hour)
@@ -125,7 +472,45 @@ fn field_to_string(field: CronField) -> String {
   }
 }
 
-/// Returns the next occurrence of a cron job after the given timestamp.
+/// Calculates the next occurrence of a cron schedule after the given timestamp.
+/// 
+/// This function finds the next time the cron expression would trigger,
+/// starting from the provided timestamp. The result is always at least
+/// one minute after the input timestamp.
+/// 
+/// ## Parameters
+/// 
+/// - `given`: The Cron struct defining the schedule
+/// - `from`: The timestamp to start searching from
+/// - `with_offset`: The timezone offset to use for calculations
+/// 
+/// ## Examples
+/// 
+/// ```gleam
+/// import gleam/time/timestamp
+/// import gleam/time/duration
+/// 
+/// let assert Ok(cron) = clockwork.from_string("0 9 * * 1-5")
+/// let now = timestamp.system_time()
+/// let offset = duration.seconds(0) // UTC
+/// 
+/// let next = clockwork.next_occurrence(
+///   given: cron,
+///   from: now,
+///   with_offset: offset
+/// )
+/// // Returns the next weekday at 9 AM
+/// ```
+/// 
+/// ## Returns
+/// 
+/// A `Timestamp` representing the next time the cron expression matches.
+/// 
+/// ## Notes
+/// 
+/// - The returned timestamp always has seconds set to 0
+/// - The function accounts for month boundaries and leap years
+/// - Weekday calculations follow the standard cron convention (0=Sunday)
 pub fn next_occurrence(
   given cron: Cron,
   from from: timestamp.Timestamp,
