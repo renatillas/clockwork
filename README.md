@@ -1,4 +1,4 @@
-# clockwork
+# Clockwork ⏰
 
 [![Package Version](https://img.shields.io/hexpm/v/clockwork)](https://hex.pm/packages/clockwork)
 [![Hex Docs](https://img.shields.io/badge/hex-docs-ffaff3)](https://hexdocs.pm/clockwork/)
